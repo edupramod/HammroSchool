@@ -1,8 +1,9 @@
 # Hammro School
 
-Hammro School is a School Management System developed as a BCA project under Pokhara University. The system is designed to digitize and automate school administrative and academic operations such as student management, attendance tracking, marks management, report generation, and class scheduling.
+Hammro School is a bacicly school management system that make simple academic and administrative tasks. It help administrators, teachers, and students manage attendance, marks, assignments and reports efficiently improving communication and productivity. [WIP]
 
-Build & run (Maven):
+
+## Build & run:
 
 ```bash
 mvn clean javafx:run
