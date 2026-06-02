@@ -7,7 +7,7 @@
     { self, ... }@inputs:
 
     let
-      javaVersion = 11; # Java 11 LTS for School Management System
+      javaVersion = 21; # Match the Java release used by the Maven build
 
       supportedSystems = [
         "x86_64-linux"
@@ -36,8 +36,6 @@
         {
           inherit jdk;
           maven = prev.maven.override { jdk_headless = jdk; };
-          gradle = prev.gradle.override { java = jdk; };
-          lombok = prev.lombok.override { inherit jdk; };
         };
 
       devShells = forEachSupportedSystem (
@@ -45,76 +43,24 @@
         {
           default = pkgs.mkShell {
             name = "school-management-system-dev";
-            
+
             packages = with pkgs; [
-              # Java build tools
               jdk
               maven
-              gradle
-              
-              # Database
-              sqlite
-              sqlitebrowser  # GUI for viewing SQLite databases
-              
-              # Development utilities
               git
-              git-lfs
               curl
               wget
-              
-              # Code quality
               gcc
               gnumake
-              
-              # Documentation
-              pandoc
-              
-              # Debugging & profiling
               jdt-language-server
-              
-              # Additional utilities
-              vim
-              nano
-              htop
             ];
 
             env = {
-              # Ensure we use the correct Java version
               JAVA_HOME = "${pkgs.jdk}";
-              
-              # Maven configuration
               MAVEN_OPTS = "-Xmx2048m";
-              
-              # Project-specific environment
               PROJECT_DIR = builtins.toString ./.;
-              DATABASE_FILE = "school_management.db";
+              DATABASE_FILE = "data/hammroschool";
             };
-
-            shellHook = ''
-              echo "╔════════════════════════════════════════════════════════════╗"
-              echo "║    Welcome to School Management System Development Shell   ║"
-              echo "╚════════════════════════════════════════════════════════════╝"
-              echo ""
-              echo "📦 Installed Tools:"
-              echo "   Java: $(java -version 2>&1 | head -n 1)"
-              echo "   Maven: $(mvn --version | head -n 1)"
-              echo "   SQLite: $(sqlite3 --version)"
-              echo ""
-              echo "🚀 Quick Commands:"
-              echo "   Build:  mvn clean install"
-              echo "   Run:    mvn exec:java -Dexec.mainClass=\"com.schoolms.Main\""
-              echo "   Package: mvn clean package"
-              echo "   Test:   mvn test"
-              echo "   DB:     sqlite3 school_management.db"
-              echo ""
-              echo "📚 Documentation:"
-              echo "   cat README.md         - Full documentation"
-              echo "   cat QUICKSTART.md     - Quick start guide"
-              echo "   cat DEVELOPMENT.md    - Development guide"
-              echo ""
-              echo "Type 'exit' to leave the development shell"
-              echo ""
-            '';
           };
         }
       );
@@ -135,7 +81,7 @@
             type = "app";
             program = toString (pkgs.writeShellScript "run" ''
               cd ${builtins.toString ./.}
-              ${pkgs.maven}/bin/mvn exec:java -Dexec.mainClass="com.schoolms.Main"
+              ${pkgs.maven}/bin/mvn clean javafx:run
             '');
           };
 
@@ -144,28 +90,6 @@
             program = toString (pkgs.writeShellScript "package" ''
               cd ${builtins.toString ./.}
               ${pkgs.maven}/bin/mvn clean package
-            '');
-          };
-
-          test = {
-            type = "app";
-            program = toString (pkgs.writeShellScript "test" ''
-              cd ${builtins.toString ./.}
-              ${pkgs.maven}/bin/mvn test
-            '');
-          };
-
-          db = {
-            type = "app";
-            program = toString (pkgs.writeShellScript "db" ''
-              ${pkgs.sqlite}/bin/sqlite3 ${builtins.toString ./school_management.db}
-            '');
-          };
-
-          db-browser = {
-            type = "app";
-            program = toString (pkgs.writeShellScript "db-browser" ''
-              ${pkgs.sqlitebrowser}/bin/sqlitebrowser ${builtins.toString ./school_management.db}
             '');
           };
         }
