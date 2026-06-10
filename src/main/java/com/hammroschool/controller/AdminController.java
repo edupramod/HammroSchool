@@ -1,13 +1,15 @@
 package com.hammroschool.controller;
 
+import java.util.Locale;
+import java.util.Objects;
+
 import com.hammroschool.model.auth.UserAccount;
 import com.hammroschool.model.auth.UserRole;
 import com.hammroschool.service.AuthService;
 import com.hammroschool.service.impl.InMemoryAuthService;
 import com.hammroschool.util.SceneSwitcher;
 import com.hammroschool.util.SessionContext;
-import java.util.Locale;
-import java.util.Objects;
+
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -176,6 +178,11 @@ public class AdminController {
         } else {
             statusLabel.setText("Username is required, password is required, and the username must be unique.");
         }
+    }
+
+    @FXML
+    private void handleNavAccounts() {
+        SceneSwitcher.showView(welcomeLabel, "/com/hammroschool/account-view.fxml", "Accounts", 1280, 860);
     }
 
     @FXML
