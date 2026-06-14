@@ -127,7 +127,7 @@
                                 <DropShadow blurType="GAUSSIAN" color="#20304033" offsetY="8" radius="20" />
                             </effect>
                             <image>
-                                <Image url="@assets/hero-image.png" />
+                                <Image url="@assets/hero.png" />
                             </image>
                         </ImageView>
                     </children>
