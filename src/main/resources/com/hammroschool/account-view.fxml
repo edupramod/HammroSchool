@@ -21,7 +21,7 @@
                 <HBox alignment="CENTER_LEFT" spacing="12.0">
                     <children>
                         <ImageView fitHeight="38.0" fitWidth="38.0" preserveRatio="true">
-                            <image><Image url="@images/logo.png" /></image>
+                            <image><Image url="@assets/logo.png" /></image>
                         </ImageView>
                         <VBox spacing="2.0">
                             <children>
@@ -40,7 +40,7 @@
                                 text="Dashboard">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-                                    <image><Image url="@images/account-dashboard/dashboard-icon.png" /></image>
+                                    <image><Image url="@assets/admin/aside/dashboard-dark.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
@@ -51,7 +51,7 @@
                                 text="Accounts">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-                                    <image><Image url="@images/account-dashboard/account-icon.png" /></image>
+                                    <image><Image url="@assets/admin/aside/account-dark.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
@@ -62,7 +62,7 @@
                                 text="Teachers">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-                                    <image><Image url="@images/account-dashboard/teachers-icon.png" /></image>
+                                    <image><Image url="@assets/admin/aside/teacher.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
@@ -73,7 +73,7 @@
                                 text="Students">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-                                    <image><Image url="@images/account-dashboard/student-icon.png" /></image>
+                                    <image><Image url="@assets/admin/aside/student.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
@@ -84,7 +84,7 @@
                                 text="Settings">
                             <graphic>
                                 <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-                                    <image><Image url="@images/account-dashboard/settings-icon.png" /></image>
+                                    <image><Image url="@assets/admin/aside/setting.png" /></image>
                                 </ImageView>
                             </graphic>
                         </Button>
@@ -99,7 +99,7 @@
                         text="Logout">
                     <graphic>
                         <ImageView fitHeight="16.0" fitWidth="16.0" preserveRatio="true">
-                            <image><Image url="@images/account-dashboard/logout-icon.png" /></image>
+                            <image><Image url="@assets/admin/aside/logout.png" /></image>
                         </ImageView>
                     </graphic>
                 </Button>
@@ -128,7 +128,7 @@
                                       style="-fx-background-color: white; -fx-background-radius: 999; -fx-border-color: #ebe9e4; -fx-border-radius: 999; -fx-padding: 8 16 8 12; -fx-cursor: hand;">
                                     <children>
                                         <ImageView fitHeight="15.0" fitWidth="15.0" preserveRatio="true">
-                                            <image><Image url="@images/account-dashboard/alerts-btn-icon.png" /></image>
+                                            <image><Image url="@assets/admin/account/alerts.png" /></image>
                                         </ImageView>
                                         <Label style="-fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #272727;" text="Alerts" />
                                     </children>
@@ -166,7 +166,7 @@
                                               style="-fx-background-color: #fbfbfa; -fx-background-radius: 10; -fx-border-color: #e6e4df; -fx-border-radius: 10; -fx-padding: 0 12 0 10;">
                                             <children>
                                                 <ImageView fitHeight="14.0" fitWidth="14.0" preserveRatio="true">
-                                                    <image><Image url="@images/account-dashboard/search-icon.png" /></image>
+                                                    <image><Image url="@assets/admin/account/search.png" /></image>
                                                 </ImageView>
                                                 <TextField fx:id="searchField" prefHeight="36.0"
                                                            promptText="Search"
