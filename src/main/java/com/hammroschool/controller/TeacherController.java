@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import com.hammroschool.model.entity.Teacher;
+import com.hammroschool.model.auth.UserAccount;
 import com.hammroschool.service.TeacherService;
 import com.hammroschool.service.impl.TeacherServiceImpl;
 import com.hammroschool.util.SceneSwitcher;
@@ -30,9 +30,9 @@ public class TeacherController {
     private static final int PAGE_SIZE = 7;
 
     private final TeacherService teacherService = TeacherServiceImpl.getInstance();
-    private final ObservableList<Teacher> allTeachers = FXCollections.observableArrayList();
+    private final ObservableList<UserAccount> allTeachers = FXCollections.observableArrayList();
 
-    private List<Teacher> filteredTeachers = List.of();
+    private List<UserAccount> filteredTeachers = List.of();
     private int currentPage = 0;
 
     // ── FXML nodes ──────────────────────────────────────────────────────────
@@ -47,12 +47,10 @@ public class TeacherController {
     @FXML private Label summaryLabel;
     @FXML private TextField searchField;
 
-    @FXML private TableView<Teacher>                teacherTable;
-    @FXML private TableColumn<Teacher, Teacher>     teacherColumn;
-    @FXML private TableColumn<Teacher, String>      usernameColumn;
-    @FXML private TableColumn<Teacher, String>      subjectColumn;
-    @FXML private TableColumn<Teacher, Teacher>     statusColumn;
-    @FXML private TableColumn<Teacher, Teacher>     actionsColumn;
+    @FXML private TableView<UserAccount>                teacherTable;
+    @FXML private TableColumn<UserAccount, UserAccount> teacherColumn;
+    @FXML private TableColumn<UserAccount, String>      usernameColumn;
+    @FXML private TableColumn<UserAccount, UserAccount> actionsColumn;
 
     @FXML private Button prevButton;
     @FXML private Button nextButton;
@@ -79,11 +77,11 @@ public class TeacherController {
         teacherColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue()));
         teacherColumn.setCellFactory(col -> new TableCell<>() {
             @Override
-            protected void updateItem(Teacher teacher, boolean empty) {
-                super.updateItem(teacher, empty);
-                if (empty || teacher == null) { setGraphic(null); return; }
+            protected void updateItem(UserAccount account, boolean empty) {
+                super.updateItem(account, empty);
+                if (empty || account == null) { setGraphic(null); return; }
 
-                Label initialsLabel = new Label(getInitials(teacher.getName()));
+                Label initialsLabel = new Label(getInitials(account.getUsername()));
                 initialsLabel.setStyle(
                     "-fx-background-color: #e8e8e6; -fx-text-fill: #444444; " +
                     "-fx-font-size: 11px; -fx-font-weight: 800; " +
@@ -93,7 +91,7 @@ public class TeacherController {
                     "-fx-alignment: center;"
                 );
 
-                Label nameLabel = new Label(teacher.getName());
+                Label nameLabel = new Label(formatDisplayName(account.getUsername()));
                 nameLabel.setStyle("-fx-text-fill: #222222; -fx-font-size: 13px; -fx-font-weight: 700;");
 
                 HBox container = new HBox(10, initialsLabel, nameLabel);
@@ -114,52 +112,13 @@ public class TeacherController {
             }
         });
 
-        // Subject column
-        subjectColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getSubject()));
-        subjectColumn.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String subject, boolean empty) {
-                super.updateItem(subject, empty);
-                if (empty || subject == null) { setText(null); return; }
-                setText(subject);
-                setStyle("-fx-text-fill: #222222; -fx-font-size: 13px;");
-            }
-        });
-
-        // Status column — pill badge
-        statusColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue()));
-        statusColumn.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(Teacher teacher, boolean empty) {
-                super.updateItem(teacher, empty);
-                if (empty || teacher == null) { setGraphic(null); setText(null); return; }
-
-                Label badge = new Label(teacher.isActive() ? "Active" : "Inactive");
-                if (teacher.isActive()) {
-                    badge.setStyle(
-                        "-fx-background-color: #dcfce7; -fx-text-fill: #166534; " +
-                        "-fx-padding: 4 12 4 12; -fx-background-radius: 999; " +
-                        "-fx-font-size: 12px; -fx-font-weight: 700;"
-                    );
-                } else {
-                    badge.setStyle(
-                        "-fx-background-color: #f4f4f5; -fx-text-fill: #71717a; " +
-                        "-fx-padding: 4 12 4 12; -fx-background-radius: 999; " +
-                        "-fx-font-size: 12px; -fx-font-weight: 700;"
-                    );
-                }
-                setGraphic(badge);
-                setText(null);
-            }
-        });
-
         // Actions column — three-dot button
         actionsColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue()));
         actionsColumn.setCellFactory(col -> new TableCell<>() {
             @Override
-            protected void updateItem(Teacher teacher, boolean empty) {
-                super.updateItem(teacher, empty);
-                if (empty || teacher == null) { setGraphic(null); return; }
+            protected void updateItem(UserAccount account, boolean empty) {
+                super.updateItem(account, empty);
+                if (empty || account == null) { setGraphic(null); return; }
 
                 ImageView dotIcon = new ImageView(new Image(
                     Objects.requireNonNull(
@@ -180,7 +139,7 @@ public class TeacherController {
         });
 
         teacherTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        teacherTable.setPlaceholder(new Label("No teachers found"));
+        teacherTable.setPlaceholder(new Label("No teachers added yet"));
         teacherTable.setStyle("-fx-background-color: transparent;");
     }
 
@@ -190,8 +149,9 @@ public class TeacherController {
         allTeachers.setAll(teacherService.getAllTeachers());
 
         totalTeachersLabel.setText(String.valueOf(allTeachers.size()));
-        activeTeachersLabel.setText(String.valueOf(teacherService.countActive()));
-        newThisMonthLabel.setText(String.valueOf(teacherService.countNewThisMonth()));
+        // All accounts created by admin are considered active; no separate status field exists yet
+        activeTeachersLabel.setText(String.valueOf(allTeachers.size()));
+        newThisMonthLabel.setText("—");
 
         currentPage = 0;
         applyFilterAndPage(searchField.getText());
@@ -200,11 +160,9 @@ public class TeacherController {
     private void applyFilterAndPage(String query) {
         String q = (query == null ? "" : query.trim().toLowerCase(Locale.ROOT));
 
-        List<Teacher> filtered = allTeachers.stream()
-            .filter(t -> q.isEmpty()
-                || t.getName().toLowerCase(Locale.ROOT).contains(q)
-                || t.getUsername().toLowerCase(Locale.ROOT).contains(q)
-                || t.getSubject().toLowerCase(Locale.ROOT).contains(q))
+        List<UserAccount> filtered = allTeachers.stream()
+            .filter(a -> q.isEmpty()
+                || a.getUsername().toLowerCase(Locale.ROOT).contains(q))
             .toList();
 
         filteredTeachers = filtered;
@@ -272,12 +230,18 @@ public class TeacherController {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private String getInitials(String name) {
-        if (name == null || name.isBlank()) return "?";
-        String[] parts = name.trim().split("\\s+");
+    private String getInitials(String username) {
+        if (username == null || username.isBlank()) return "?";
+        String[] parts = username.trim().split("\\s+");
         if (parts.length == 1) {
             return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase(Locale.ROOT);
         }
         return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase(Locale.ROOT);
+    }
+
+    private String formatDisplayName(String username) {
+        if (username == null || username.isBlank()) return "Unknown";
+        String trimmed = username.trim();
+        return Character.toUpperCase(trimmed.charAt(0)) + trimmed.substring(1);
     }
 }

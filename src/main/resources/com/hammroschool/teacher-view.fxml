@@ -262,10 +262,8 @@
 
                                 <TableView fx:id="teacherTable" VBox.vgrow="ALWAYS">
                                     <columns>
-                                        <TableColumn fx:id="teacherColumn"  prefWidth="200.0" text="Teacher" />
-                                        <TableColumn fx:id="usernameColumn" prefWidth="150.0" text="Username" />
-                                        <TableColumn fx:id="subjectColumn"  prefWidth="180.0" text="Subject" />
-                                        <TableColumn fx:id="statusColumn"   prefWidth="120.0" text="Status" />
+                                        <TableColumn fx:id="teacherColumn"  prefWidth="280.0" text="Teacher" />
+                                        <TableColumn fx:id="usernameColumn" prefWidth="260.0" text="Username" />
                                         <TableColumn fx:id="actionsColumn"  prefWidth="80.0"  text="Actions" />
                                     </columns>
                                 </TableView>
