@@ -69,7 +69,7 @@
                             </graphic>
                         </Button>
 
-                        <Button alignment="CENTER_LEFT" graphicTextGap="12.0"
+                        <Button alignment="CENTER_LEFT" graphicTextGap="12.0" onAction="#handleNavStudents"
                                 prefHeight="28.0"
                                 style="-fx-background-color: transparent; -fx-background-radius: 8; -fx-text-fill: #272727; -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 10 14 10 14; -fx-cursor: hand;"
                                 text="Students">
@@ -80,7 +80,7 @@
                             </graphic>
                         </Button>
 
-                        <Button alignment="CENTER_LEFT" graphicTextGap="12.0"
+                        <Button alignment="CENTER_LEFT" graphicTextGap="12.0" onAction="#handleNavSettings"
                                 prefHeight="28.0"
                                 style="-fx-background-color: transparent; -fx-background-radius: 8; -fx-text-fill: #272727; -fx-font-size: 13px; -fx-font-weight: 600; -fx-padding: 10 14 10 14; -fx-cursor: hand;"
                                 text="Settings">

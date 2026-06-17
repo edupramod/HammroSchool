@@ -106,6 +106,36 @@ public final class InMemoryAuthService implements AuthService {
         }
     }
 
+    @Override
+    public synchronized boolean updatePassword(String username, String newPassword) {
+        if (isBlank(username) || isBlank(newPassword)) {
+            return false;
+        }
+
+        String normalizedUsername = normalize(username);
+        String checkSql  = "SELECT 1 FROM user_accounts WHERE username = ?";
+        String updateSql = "UPDATE user_accounts SET password = ? WHERE username = ?";
+
+        try (Connection connection = databaseSupport.openConnection();
+             PreparedStatement checkStatement = connection.prepareStatement(checkSql)) {
+            checkStatement.setString(1, normalizedUsername);
+            try (ResultSet resultSet = checkStatement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return false;   // account not found
+                }
+            }
+
+            try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
+                updateStatement.setString(1, newPassword);
+                updateStatement.setString(2, normalizedUsername);
+                updateStatement.executeUpdate();
+                return true;
+            }
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Unable to update password for " + normalizedUsername, exception);
+        }
+    }
+
     private UserAccount mapAccount(ResultSet resultSet) throws SQLException {
         return new UserAccount(
                 resultSet.getString("username"),

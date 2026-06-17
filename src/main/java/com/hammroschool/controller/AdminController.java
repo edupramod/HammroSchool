@@ -191,6 +191,16 @@ public class AdminController {
     }
 
     @FXML
+    private void handleNavStudents() {
+        SceneSwitcher.showView(welcomeLabel, "/com/hammroschool/student-view.fxml", "Students", 1280, 860);
+    }
+
+    @FXML
+    private void handleNavSettings() {
+        SceneSwitcher.showView(welcomeLabel, "/com/hammroschool/settings-view.fxml", "Settings", 1280, 860);
+    }
+
+    @FXML
     private void handleLogout() {
         SessionContext.getInstance().clear();
         SceneSwitcher.showView(welcomeLabel, "/com/hammroschool/hello-view.fxml", "Hammro School", 920, 720);

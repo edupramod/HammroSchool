@@ -12,4 +12,12 @@ public interface AuthService {
     boolean createAccount(String username, String password, UserRole role);
 
     List<UserAccount> getAccounts();
+
+    /**
+     * Updates the password for an existing account.
+     *
+     * @return {@code true} if the account was found and the password updated,
+     *         {@code false} if no account with that username exists.
+     */
+    boolean updatePassword(String username, String newPassword);
 }
