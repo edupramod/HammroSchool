@@ -6,6 +6,7 @@ import com.hammroschool.service.AuthService;
 import com.hammroschool.service.impl.InMemoryAuthService;
 import com.hammroschool.util.SceneSwitcher;
 import com.hammroschool.util.SessionContext;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
@@ -127,7 +128,7 @@ public class AuthController {
                 return;
             }
             case TEACHER -> {
-                fxmlPath = "/com/hammroschool/teacher-view.fxml";
+                fxmlPath = "/com/hammroschool/teacher-dashboard-view.fxml";
                 title = "Teacher Dashboard";
             }
             default -> {
@@ -136,6 +137,6 @@ public class AuthController {
             }
         }
 
-        SceneSwitcher.showView(usernameField, fxmlPath, title, 980, 640);
+        SceneSwitcher.showView(usernameField, fxmlPath, title, 1280, 860);
     }
 }

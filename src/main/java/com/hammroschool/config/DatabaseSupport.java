@@ -57,6 +57,7 @@ public final class DatabaseSupport {
                 statement.executeUpdate(loadSqlFromResource("create_students.sql"));
                 statement.executeUpdate(loadSqlFromResource("create_teachers.sql"));
                 statement.executeUpdate(loadSqlFromResource("create_class_rooms.sql"));
+                statement.executeUpdate(loadSqlFromResource("create_marks.sql"));
             }
             initialized = true;
         } catch (ClassNotFoundException exception) {
