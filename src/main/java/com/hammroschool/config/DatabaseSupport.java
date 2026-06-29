@@ -58,6 +58,7 @@ public final class DatabaseSupport {
                 statement.executeUpdate(loadSqlFromResource("create_teachers.sql"));
                 statement.executeUpdate(loadSqlFromResource("create_class_rooms.sql"));
                 statement.executeUpdate(loadSqlFromResource("create_marks.sql"));
+                statement.executeUpdate(loadSqlFromResource("create_attendance.sql"));
                 runMigrations(connection);
             }
             initialized = true;
