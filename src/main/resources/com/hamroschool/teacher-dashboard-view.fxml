@@ -166,6 +166,7 @@
                                                         <TableColumn fx:id="attColStudent" prefWidth="240.0" text="Student" />
                                                         <TableColumn fx:id="attColPct"     prefWidth="120.0" text="Attendance %" />
                                                         <TableColumn fx:id="attColStatus"  prefWidth="300.0" text="Status" />
+                                                        <TableColumn fx:id="attColFeedback" prefWidth="220.0" text="Feedback" />
                                                     </columns>
                                                 </TableView>
                                                 <HBox alignment="CENTER_LEFT" spacing="14.0">

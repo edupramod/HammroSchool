@@ -9,8 +9,14 @@ import com.hamroschool.model.entity.AttendanceRecord;
 public interface AttendanceService {
 
     /** Save (upsert) attendance for one student on a given date. */
+    default void saveAttendance(String studentUsername, String teacherUsername,
+                                String subjectName, LocalDate date, String status) {
+        saveAttendance(studentUsername, teacherUsername, subjectName, date, status, "");
+    }
+
+    /** Save (upsert) attendance and optional teacher feedback for one student on a given date. */
     void saveAttendance(String studentUsername, String teacherUsername,
-                        String subjectName, LocalDate date, String status);
+                        String subjectName, LocalDate date, String status, String feedback);
 
     /** Get all attendance records for a teacher on a specific date and subject. */
     List<AttendanceRecord> getAttendanceForDate(String teacherUsername,
@@ -21,6 +27,12 @@ public interface AttendanceService {
      * based on all records by this teacher for this subject.
      */
     Map<String, Double> getAttendancePercentages(String teacherUsername, String subjectName);
+
+    /**
+     * Returns a map of studentUsername → [attendedClasses, totalClasses].
+     * Attended classes include PRESENT and LATE.
+     */
+    Map<String, int[]> getAttendanceTotals(String teacherUsername, String subjectName);
 
     /** Get the most recent status for a student (for today's row default). */
     String getStatusForToday(String studentUsername, String teacherUsername,
