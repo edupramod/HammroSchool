@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import com.hamroschool.model.dto.ReportCardEntry;
 import com.hamroschool.model.dto.StudentMarkSummary;
+import com.hamroschool.model.entity.AttendanceRecord;
 import com.hamroschool.model.entity.Mark;
 import com.hamroschool.service.AttendanceService;
 import com.hamroschool.service.MarkService;
@@ -47,6 +48,14 @@ public class TeacherDashboardController {
 
     /** Live map: studentUsername → current status (PRESENT/ABSENT/LATE) for today's session. */
     private final Map<String, String> pendingStatus = new HashMap<>();
+    /** Live map: studentUsername → feedback note for today's session. */
+    private final Map<String, String> pendingFeedback = new HashMap<>();
+    /** Last saved status map for today's session (used to compute live percentages). */
+    private final Map<String, String> savedStatusToday = new HashMap<>();
+    /** Baseline historical totals from DB: studentUsername → [attendedClasses, totalClasses]. */
+    private final Map<String, int[]> attendanceTotalsMap = new HashMap<>();
+    /** Live map: studentUsername → attendance percentage including unsaved pending changes. */
+    private final Map<String, Double> liveAttendancePctMap = new HashMap<>();
 
     // ── Top bar ──────────────────────────────────────────────────────────────
     @FXML private Label  pageTitle;
@@ -83,6 +92,7 @@ public class TeacherDashboardController {
     @FXML private TableColumn<String, String>  attColStudent;
     @FXML private TableColumn<String, String>  attColPct;
     @FXML private TableColumn<String, String>  attColStatus;
+    @FXML private TableColumn<String, String>  attColFeedback;
 
     // ── Mark sheet ────────────────────────────────────────────────────────────
     @FXML private Label            msSheetTitle;
@@ -229,6 +239,7 @@ public class TeacherDashboardController {
     private void handleMarkAllPresent() {
         List<String> students = getFilteredStudents();
         for (String s : students) pendingStatus.put(s, "PRESENT");
+        recalculateLiveAttendancePercentages();
         attTable.refresh();
         updateAttendanceSummary();
     }
@@ -239,7 +250,8 @@ public class TeacherDashboardController {
         List<String> students = markService.getAllStudentUsernames();
         for (String s : students) {
             String status = pendingStatus.getOrDefault(s, "PRESENT");
-            attendanceService.saveAttendance(s, teacherUsername, subject, attendanceDate, status);
+            String feedback = pendingFeedback.getOrDefault(s, "");
+            attendanceService.saveAttendance(s, teacherUsername, subject, attendanceDate, status, feedback);
         }
         refreshAttendance();
     }
@@ -247,8 +259,13 @@ public class TeacherDashboardController {
     /** Called by the per-row Present/Late/Absent toggle buttons. */
     private void setStudentStatus(String studentUsername, String status) {
         pendingStatus.put(studentUsername, status);
+        recalculateLiveAttendancePercentages();
         attTable.refresh();
         updateAttendanceSummary();
+    }
+
+    private void setStudentFeedback(String studentUsername, String feedback) {
+        pendingFeedback.put(studentUsername, normalizeFeedback(feedback));
     }
 
     // ── Attendance helpers ────────────────────────────────────────────────────
@@ -262,16 +279,31 @@ public class TeacherDashboardController {
                 + " · Read-only context set by admin");
         subjectTagLabel.setText(assignedSubject.isBlank() ? "No Subject" : assignedSubject);
 
+        attendanceTotalsMap.clear();
+        attendanceTotalsMap.putAll(attendanceService.getAttendanceTotals(teacherUsername, subject));
+
+        Map<String, AttendanceRecord> todayRecords = new HashMap<>();
+        for (AttendanceRecord record : attendanceService.getAttendanceForDate(teacherUsername, subject, attendanceDate)) {
+            todayRecords.put(record.getStudentUsername(), record);
+        }
+        savedStatusToday.clear();
+        todayRecords.forEach((student, record) -> savedStatusToday.put(student, record.getStatus()));
+
         // Seed pendingStatus from DB for today
         List<String> allStudents = markService.getAllStudentUsernames();
         for (String s : allStudents) {
-            if (!pendingStatus.containsKey(s)) {
-                String saved = attendanceService.getStatusForToday(
-                        s, teacherUsername, subject, attendanceDate);
-                pendingStatus.put(s, saved);
-            }
+            String savedStatus = Optional.ofNullable(todayRecords.get(s))
+                    .map(AttendanceRecord::getStatus)
+                    .orElse("PRESENT");
+            String savedFeedback = Optional.ofNullable(todayRecords.get(s))
+                    .map(AttendanceRecord::getFeedback)
+                    .orElse("");
+
+            pendingStatus.put(s, savedStatus);
+            pendingFeedback.put(s, savedFeedback);
         }
 
+        recalculateLiveAttendancePercentages();
         String query = attSearchField == null ? "" : attSearchField.getText();
         attTable.setItems(FXCollections.observableArrayList(getFilteredStudents(query)));
         attTotalLabel.setText(String.valueOf(allStudents.size()));
@@ -299,13 +331,41 @@ public class TeacherDashboardController {
         return all.stream().filter(s -> s.toLowerCase(Locale.ROOT).contains(q)).toList();
     }
 
-    // ── Attendance table setup ────────────────────────────────────────────────
+    private void recalculateLiveAttendancePercentages() {
+        liveAttendancePctMap.clear();
+        List<String> allStudents = markService.getAllStudentUsernames();
+        for (String student : allStudents) {
+            int[] baseline = attendanceTotalsMap.getOrDefault(student, new int[]{0, 0});
+            int attended = baseline[0];
+            int total = baseline[1];
+
+            String currentStatus = pendingStatus.getOrDefault(student, "PRESENT");
+            String savedStatus = savedStatusToday.get(student);
+
+            if (savedStatus == null) {
+                total += 1;
+                if (isAttendedStatus(currentStatus)) attended += 1;
+            } else {
+                if (isAttendedStatus(savedStatus)) attended -= 1;
+                if (isAttendedStatus(currentStatus)) attended += 1;
+            }
+
+            double pct = total > 0 ? Math.round(attended * 1000.0 / total) / 10.0 : 0.0;
+            liveAttendancePctMap.put(student, pct);
+        }
+    }
+
+    private static boolean isAttendedStatus(String status) {
+        return "PRESENT".equals(status) || "LATE".equals(status);
+    }
+
+    private static String normalizeFeedback(String feedback) {
+        if (feedback == null) return "";
+        String compact = feedback.trim();
+        return compact.length() <= 300 ? compact : compact.substring(0, 300);
+    }
 
     private void setupAttendanceTable() {
-        String subject = assignedSubject.isBlank() ? "General" : assignedSubject;
-        Map<String, Double> pctMap = attendanceService.getAttendancePercentages(teacherUsername, subject);
-
-        // Roll number column (1-based index)
         attColRoll.setCellValueFactory(c -> {
             int idx = attTable.getItems().indexOf(c.getValue());
             return new ReadOnlyStringWrapper(String.format("%02d", idx + 1));
@@ -319,7 +379,6 @@ public class TeacherDashboardController {
             }
         });
 
-        // Student column — initials avatar + name
         attColStudent.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue()));
         attColStudent.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String username, boolean empty) {
@@ -343,7 +402,7 @@ public class TeacherDashboardController {
 
         // Attendance % column
         attColPct.setCellValueFactory(c -> {
-            double pct = pctMap.getOrDefault(c.getValue(), 0.0);
+            double pct = liveAttendancePctMap.getOrDefault(c.getValue(), 0.0);
             return new ReadOnlyStringWrapper(pct + "%");
         });
         attColPct.setCellFactory(col -> new TableCell<>() {
@@ -386,6 +445,36 @@ public class TeacherDashboardController {
                 HBox box = new HBox(6, btnPresent, btnLate, btnAbsent);
                 box.setAlignment(Pos.CENTER_LEFT);
                 setGraphic(box);
+            }
+        });
+
+        attColFeedback.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue()));
+        attColFeedback.setCellFactory(col -> new TableCell<>() {
+            private final TextField feedbackField = new TextField();
+            {
+                feedbackField.setPromptText("Optional feedback");
+                feedbackField.setStyle("-fx-font-size: 12px;");
+                feedbackField.setOnAction(e -> commitEdit());
+                feedbackField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+                    if (!isFocused) commitEdit();
+                });
+            }
+
+            private void commitEdit() {
+                String username = getItem();
+                if (username != null) {
+                    setStudentFeedback(username, feedbackField.getText());
+                }
+            }
+
+            @Override protected void updateItem(String username, boolean empty) {
+                super.updateItem(username, empty);
+                if (empty || username == null) {
+                    setGraphic(null);
+                    return;
+                }
+                feedbackField.setText(pendingFeedback.getOrDefault(username, ""));
+                setGraphic(feedbackField);
             }
         });
 
@@ -578,7 +667,6 @@ public class TeacherDashboardController {
 
         msSearchField.textProperty().addListener((obs, o, n) -> loadMarkSheetTable(n));
 
-        // ── Report card table ────────────────────────────────────────────────
         rcColRoll.setCellValueFactory(c ->
                 new ReadOnlyStringWrapper(String.format("%02d", c.getValue().getRoll())));
         rcColRoll.setCellFactory(col -> new TableCell<>() {
@@ -732,7 +820,6 @@ public class TeacherDashboardController {
         pfSubjectCombo.setItems(items);
     }
 
-    // ── Shared helpers ────────────────────────────────────────────────────────
 
     private static final String ACTIVE_STYLE =
             "-fx-background-color: #111111; -fx-background-radius: 8; -fx-text-fill: white; " +

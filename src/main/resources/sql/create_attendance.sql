@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS attendance (
     subject_name     VARCHAR(100) NOT NULL,
     attendance_date  DATE         NOT NULL,
     status           VARCHAR(10)  NOT NULL DEFAULT 'PRESENT',
+    feedback         VARCHAR(300) NOT NULL DEFAULT '',
     CONSTRAINT uq_attendance UNIQUE (student_username, teacher_username, attendance_date, subject_name)
 )

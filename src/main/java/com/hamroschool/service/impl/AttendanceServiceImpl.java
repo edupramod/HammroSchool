@@ -42,7 +42,8 @@ public final class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public synchronized void saveAttendance(String studentUsername, String teacherUsername,
-                                             String subjectName, LocalDate date, String status) {
+                                             String subjectName, LocalDate date, String status,
+                                             String feedback) {
         Date mongoDate = toMongoDate(date);
         org.bson.conversions.Bson filter = Filters.and(
                 Filters.eq("studentUsername", studentUsername),
@@ -54,7 +55,8 @@ public final class AttendanceServiceImpl implements AttendanceService {
                 .append("teacherUsername", teacherUsername)
                 .append("subjectName",     subjectName)
                 .append("attendanceDate",  mongoDate)
-                .append("status",          status == null ? "PRESENT" : status.toUpperCase());
+            .append("status",          status == null ? "PRESENT" : status.toUpperCase())
+            .append("feedback",        feedback == null ? "" : feedback.trim());
 
         col.replaceOne(filter, doc, new ReplaceOptions().upsert(true));
     }
@@ -80,6 +82,18 @@ public final class AttendanceServiceImpl implements AttendanceService {
     @Override
     public synchronized Map<String, Double> getAttendancePercentages(String teacherUsername,
                                                                        String subjectName) {
+        Map<String, int[]> totals = getAttendanceTotals(teacherUsername, subjectName);
+        Map<String, Double> result = new HashMap<>();
+        totals.forEach((student, arr) -> {
+            double pct = arr[1] > 0 ? Math.round(arr[0] * 1000.0 / arr[1]) / 10.0 : 0.0;
+            result.put(student, pct);
+        });
+        return result;
+    }
+
+    @Override
+    public synchronized Map<String, int[]> getAttendanceTotals(String teacherUsername,
+                                                                 String subjectName) {
         Map<String, int[]> totals = new HashMap<>();  // username → [attended, total]
         for (Document d : col.find(Filters.and(
                 Filters.eq("teacherUsername", teacherUsername),
@@ -90,12 +104,7 @@ public final class AttendanceServiceImpl implements AttendanceService {
             arr[1]++;  // total
             if ("PRESENT".equals(status) || "LATE".equals(status)) arr[0]++;  // attended
         }
-        Map<String, Double> result = new HashMap<>();
-        totals.forEach((student, arr) -> {
-            double pct = arr[1] > 0 ? Math.round(arr[0] * 1000.0 / arr[1]) / 10.0 : 0.0;
-            result.put(student, pct);
-        });
-        return result;
+        return totals;
     }
 
     @Override
@@ -125,7 +134,8 @@ public final class AttendanceServiceImpl implements AttendanceService {
                 d.getString("teacherUsername"),
                 d.getString("subjectName"),
                 date,
-                d.getString("status"));
+            d.getString("status"),
+            d.getString("feedback"));
     }
 
     /** Convert LocalDate to java.util.Date (midnight UTC) for MongoDB storage. */
